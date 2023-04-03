@@ -22,8 +22,8 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
-          bundler-cache: true
-      - name: Run specs
-        run: bin/rspec
-      - name: Run rubocop
-        run: bin/rubocop
+          bundler: none
+      - name: Install deps
+        run: bin/rake spec:deps
+      - name: Run default task
+        run: bin/rake
