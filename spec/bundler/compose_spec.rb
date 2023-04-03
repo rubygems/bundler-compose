@@ -129,13 +129,13 @@ RSpec.describe Bundler::Compose do
 
       # compose
 
-      bundle "compose gems rails rack-obama"
+      bundle "compose gems rails rack-obama:1"
       expect(last_command.stdout).to end_with("\n2.3.2")
 
       # diff
 
       expect(the_bundle).to match_fs(
-        ".bundle/bundler-compose/rails_rack-obama/gems.rails_rack-obama.rb" => read_as(<<~RUBY),
+        ".bundle/bundler-compose/rails_rack-obama@1/gems.rails_rack-obama@1.rb" => read_as(<<~RUBY),
           # lockfile:../../../Gemfile:85a8a384f4b322cebcf8f0a54eb11b235da3eb7f50676c251c7cf727317ee31d
 
           ################################################################################
@@ -154,11 +154,11 @@ RSpec.describe Bundler::Compose do
           # Composed dependencies
           ################################################################################
 
-          gem "rack-obama"
+          gem "rack-obama", "= 1"
           gem "rails"
         RUBY
 
-        ".bundle/bundler-compose/rails_rack-obama/gems.rails_rack-obama.rb.lock" => read_as(<<~LOCKFILE),
+        ".bundle/bundler-compose/rails_rack-obama@1/gems.rails_rack-obama@1.rb.lock" => read_as(<<~LOCKFILE),
           GEM
             remote: file:///Users/segiddins/Development/github.com/segiddins/bundler-compose/tmp/1/gems/remote1/
             specs:
@@ -186,7 +186,7 @@ RSpec.describe Bundler::Compose do
             #{local_platform}
 
           DEPENDENCIES
-            rack-obama
+            rack-obama (= 1)
             rails
 
           BUNDLED WITH
