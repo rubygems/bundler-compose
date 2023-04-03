@@ -261,6 +261,10 @@ module Spec
       end
     end
 
+    def sha256(contents)
+    Bundler::SharedHelpers.digest(:SHA256).hexdigest(contents)
+    end
+
     def strip_whitespace(str)
       # Trim the leading spaces
       spaces = str[/\A\s+/, 0] || ""

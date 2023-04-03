@@ -41,7 +41,7 @@ RSpec.describe Bundler::Compose do
 
       expect(the_bundle).to match_fs(
         ".bundle/bundler-compose/rails/gems.rails.rb" => read_as(<<~RUBY),
-          # lockfile:../../../Gemfile:85a8a384f4b322cebcf8f0a54eb11b235da3eb7f50676c251c7cf727317ee31d
+          # lockfile:../../../Gemfile:#{sha256(lockfile)}
 
           ################################################################################
           # Platforms found in the lockfile
@@ -136,7 +136,7 @@ RSpec.describe Bundler::Compose do
 
       expect(the_bundle).to match_fs(
         ".bundle/bundler-compose/rails_rack-obama@1/gems.rails_rack-obama@1.rb" => read_as(<<~RUBY),
-          # lockfile:../../../Gemfile:85a8a384f4b322cebcf8f0a54eb11b235da3eb7f50676c251c7cf727317ee31d
+          # lockfile:../../../Gemfile:#{sha256(lockfile)}
 
           ################################################################################
           # Platforms found in the lockfile
@@ -263,7 +263,7 @@ RSpec.describe Bundler::Compose do
 
       expect(the_bundle).to match_fs(
         ".bundle/bundler-compose/rails/gems.rails.rb" => read_as(<<~RUBY),
-          # lockfile:../../../Gemfile:4ba7b5eabb555785a99972001ccb0fccf6a83c9c74830e83515a7e9108a1ae3a
+          # lockfile:../../../Gemfile:#{sha256(lockfile)}
 
           ################################################################################
           # Platforms found in the lockfile
