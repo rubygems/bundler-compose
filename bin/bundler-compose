@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'pathname'
+
+$:.unshift File.expand_path("../lib", Pathname.new(__dir__).realpath)
+load File.expand_path("../exe/bundler-compose", Pathname.new(__dir__).realpath)
