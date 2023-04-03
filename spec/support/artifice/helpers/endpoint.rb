@@ -2,7 +2,9 @@
 
 require_relative "../../path"
 
-$LOAD_PATH.unshift(*Dir[Spec::Path.base_system_gem_path.join("gems/{mustermann,rack,tilt,sinatra,ruby2_keywords}-*/lib")].map(&:to_s))
+$LOAD_PATH.unshift(*Dir[
+  Spec::Path.base_system_gem_path.join("gems/{mustermann,rack,tilt,sinatra,ruby2_keywords}-*/lib")
+].map(&:to_s))
 
 require "sinatra/base"
 
@@ -10,7 +12,7 @@ ALL_REQUESTS = [] # rubocop:disable Style/MutableConstant
 ALL_REQUESTS_MUTEX = Thread::Mutex.new
 
 at_exit do
-  if expected = ENV["BUNDLER_SPEC_ALL_REQUESTS"]
+  if (expected = ENV["BUNDLER_SPEC_ALL_REQUESTS"])
     expected = expected.split("\n").sort
     actual = ALL_REQUESTS.sort
 
@@ -62,19 +64,20 @@ class Endpoint < Sinatra::Base
       return [] if gem_names.nil? || gem_names.empty?
 
       all_specs = %w[specs.4.8 prerelease_specs.4.8].map do |filename|
-        Marshal.load(File.open(gem_repo.join(filename)).read)
+        Bundler.load_marshal(File.open(gem_repo.join(filename)).read)
       end.inject(:+)
 
       all_specs.map do |name, version, platform|
         spec = load_spec(name, version, platform, gem_repo)
         next unless gem_names.include?(spec.name)
+
         {
-          :name => spec.name,
-          :number => spec.version.version,
-          :platform => spec.platform.to_s,
-          :dependencies => spec.dependencies.select {|dep| dep.type == :runtime }.map do |dep|
-            [dep.name, dep.requirement.requirements.map {|a| a.join(" ") }.join(", ")]
-          end,
+          name: spec.name,
+          number: spec.version.version,
+          platform: spec.platform.to_s,
+          dependencies: spec.dependencies.select { |dep| dep.type == :runtime }.map do |dep|
+            [dep.name, dep.requirement.requirements.map { |a| a.join(" ") }.join(", ")]
+          end
         }
       end.compact
     end
@@ -82,7 +85,9 @@ class Endpoint < Sinatra::Base
     def load_spec(name, version, platform, gem_repo)
       full_name = "#{name}-#{version}"
       full_name += "-#{platform}" if platform != "ruby"
-      Marshal.load(Bundler.rubygems.inflate(File.binread(gem_repo.join("quick/Marshal.4.8/#{full_name}.gemspec.rz"))))
+      Bundler.load_marshal(Bundler.rubygems.inflate(
+                             File.binread(gem_repo.join("quick/Marshal.4.8/#{full_name}.gemspec.rz"))
+                           ))
     end
   end
 

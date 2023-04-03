@@ -63,7 +63,11 @@ module Spec
 
     def path
       env_path = ENV["PATH"]
-      env_path = env_path.split(File::PATH_SEPARATOR).reject {|path| path == bindir.to_s }.join(File::PATH_SEPARATOR) if ruby_core?
+      if ruby_core?
+        env_path = env_path.split(File::PATH_SEPARATOR).reject do |path|
+          path == bindir.to_s
+        end.join(File::PATH_SEPARATOR)
+      end
       env_path
     end
 
@@ -252,7 +256,7 @@ module Spec
       version_file = File.expand_path("lib/bundler/version.rb", dir)
       contents = File.read(version_file)
       contents.sub!(/(^\s+VERSION\s*=\s*)"#{Gem::Version::VERSION_PATTERN}"/, %(\\1"#{version}"))
-      File.open(version_file, "w") {|f| f << contents }
+      File.open(version_file, "w") { |f| f << contents }
     end
 
     def ruby_core?
@@ -268,7 +272,7 @@ module Spec
     def git_ls_files(glob)
       skip "Not running on a git context, since running tests from a tarball" if ruby_core_tarball?
 
-      sys_exec("git ls-files -z -- #{glob}", :dir => source_root).split("\x0")
+      sys_exec("git ls-files -z -- #{glob}", dir: source_root).split("\x0")
     end
 
     def tracked_files_glob

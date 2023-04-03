@@ -85,11 +85,11 @@ module Spec
           s.add_dependency "activesupport", ">= 2.0.0"
         end
 
-        build_gem "rspec", "1.2.7", :no_default => true do |s|
+        build_gem "rspec", "1.2.7", no_default: true do |s|
           s.write "lib/spec.rb", "SPEC = '1.2.7'"
         end
 
-        build_gem "rack-test", :no_default => true do |s|
+        build_gem "rack-test", no_default: true do |s|
           s.write "lib/rack/test.rb", "RACK_TEST = '1.0'"
         end
 
@@ -258,9 +258,9 @@ module Spec
         rake_path = Dir["#{Path.base_system_gems}/**/rake*.gem"].first
       end
 
-      if rake_path.nil?
-        abort "Your test gems are missing! Run `rm -rf #{tmp}` and try again."
-      end
+      return unless rake_path.nil?
+
+      abort "Your test gems are missing! Run `rm -rf #{tmp}` and try again."
     end
 
     def update_repo(path)
@@ -268,11 +268,12 @@ module Spec
         raise "Updating gem_repo1 is unsupported -- use gem_repo2 instead"
       end
       return unless block_given?
+
       @_build_path = "#{path}/gems"
       @_build_repo = File.basename(path)
       yield
       with_gem_path_as Path.base_system_gem_path do
-        gem_command :generate_index, :dir => path
+        gem_command :generate_index, dir: path
       end
     ensure
       @_build_path = nil
@@ -325,7 +326,7 @@ module Spec
 
     private
 
-    def build_with(builder, name, args, &blk)
+    def build_with(builder, name, args)
       @_build_path ||= nil
       @_build_repo ||= nil
       options  = args.last.is_a?(Hash) ? args.pop : {}
@@ -373,7 +374,7 @@ module Spec
       end
 
       def versions(versions)
-        versions.split(/\s+/).each {|version| yield v(version) }
+        versions.split(/\s+/).each { |version| yield v(version) }
       end
     end
 
@@ -404,7 +405,7 @@ module Spec
         @spec.required_ruby_version = *reqs
       end
 
-      alias_method :dep, :runtime
+      alias dep runtime
     end
 
     class LibBuilder
@@ -428,6 +429,10 @@ module Spec
         @spec.send(*args, &blk)
       end
 
+      def respond_to_missing?(symbol, include_private = false)
+        @spec.respond_to?(symbol, include_private) || super
+      end
+
       def write(file, source = "")
         @files[file] = source
       end
@@ -437,10 +442,10 @@ module Spec
         @spec.executables.each do |file|
           executable = "#{@spec.bindir}/#{file}"
           shebang = if Bundler.current_ruby.jruby?
-            "#!/usr/bin/env jruby\n"
-          else
-            "#!/usr/bin/env ruby\n"
-          end
+                      "#!/usr/bin/env jruby\n"
+                    else
+                      "#!/usr/bin/env ruby\n"
+                    end
           @spec.files << executable
           write executable, "#{shebang}require_relative '../lib/#{@name}' ; puts #{Builders.constantize(@name)}"
         end
@@ -478,16 +483,17 @@ module Spec
 
         if options[:rubygems_version]
           @spec.rubygems_version = options[:rubygems_version]
-          def @spec.mark_version; end
-
-          def @spec.validate(*); end
+          @spec.singleton_class.send(:define_method, :mark_version) {}
+          @spec.singleton_class.send(:define_method, :validate) { |*| }
         end
 
         unless options[:no_default]
           gem_source = options[:source] || "path@#{path}"
-          @files = _default_files.
-                   merge("lib/#{entrypoint}/source.rb" => "#{Builders.constantize(name)}_SOURCE = #{gem_source.to_s.dump}").
-                   merge(@files)
+          @files = _default_files
+                   .merge(
+                     "lib/#{entrypoint}/source.rb" => "#{Builders.constantize(name)}_SOURCE = #{gem_source.to_s.dump}"
+                   )
+                   .merge(@files)
         end
 
         @spec.authors = ["no one"]
@@ -507,14 +513,16 @@ module Spec
         @files.each do |file, source|
           file = Pathname.new(path).join(file)
           FileUtils.mkdir_p(file.dirname)
-          File.open(file, "w") {|f| f.puts source }
-          File.chmod("+x", file) if @spec.executables.map {|exe| "#{@spec.bindir}/#{exe}" }.include?(file)
+          File.open(file, "w") { |f| f.puts source }
+          File.chmod("+x", file) if @spec.executables.map { |exe| "#{@spec.bindir}/#{exe}" }.include?(file)
         end
         path
       end
 
       def _default_files
-        @_default_files ||= { "lib/#{entrypoint}.rb" => "#{Builders.constantize(name)} = '#{version}#{platform_string}'" }
+        @_default_files ||= {
+          "lib/#{entrypoint}.rb" => "#{Builders.constantize(name)} = '#{version}#{platform_string}'"
+        }
       end
 
       def entrypoint
@@ -535,7 +543,7 @@ module Spec
         default_branch = options[:default_branch] || "main"
         path = options[:path] || _default_path
         source = options[:source] || "git@#{path}"
-        super(options.merge(:path => path, :source => source))
+        super(options.merge(path:, source:))
         @context.git("config --global init.defaultBranch #{default_branch}", path)
         @context.git("init", path)
         @context.git("add *", path)
@@ -549,7 +557,7 @@ module Spec
     class GitBareBuilder < LibBuilder
       def _build(options)
         path = options[:path] || _default_path
-        super(options.merge(:path => path))
+        super(options.merge(path:))
         @context.git("init --bare", path)
       end
     end
@@ -560,9 +568,9 @@ module Spec
         update_gemspec = options[:gemspec] || false
         source = options[:source] || "git@#{libpath}"
 
-        if branch = options[:branch]
+        if (branch = options[:branch])
           @context.git("checkout -b #{Shellwords.shellescape(branch)}", libpath)
-        elsif tag = options[:tag]
+        elsif (tag = options[:tag])
           @context.git("tag #{Shellwords.shellescape(tag)}", libpath)
         elsif options[:remote]
           @context.git("remote add origin #{options[:remote]}", libpath)
@@ -571,10 +579,10 @@ module Spec
         end
 
         current_ref = @context.git("rev-parse HEAD", libpath).strip
-        _default_files.keys.each do |path|
+        _default_files.each_key do |path|
           _default_files[path] += "\n#{Builders.constantize(name)}_PREV_REF = '#{current_ref}'"
         end
-        super(options.merge(:path => libpath, :gemspec => update_gemspec, :source => source))
+        super(options.merge(path: libpath, gemspec: update_gemspec, source:))
         @context.git("commit -am BUMP", libpath)
       end
     end
@@ -597,7 +605,7 @@ module Spec
     class GemBuilder < LibBuilder
       def _build(opts)
         lib_path = opts[:lib_path] || @context.tmp(".tmp/#{@spec.full_name}")
-        lib_path = super(opts.merge(:path => lib_path, :no_default => opts[:no_default]))
+        lib_path = super(opts.merge(path: lib_path, no_default: opts[:no_default]))
         destination = opts[:path] || _default_path
         FileUtils.mkdir_p(lib_path.join(destination))
 
@@ -606,16 +614,16 @@ module Spec
             Bundler.rubygems.build(@spec, opts[:skip_validation])
           end
         elsif opts[:skip_validation]
-          @context.gem_command "build --force #{@spec.name}", :dir => lib_path
+          @context.gem_command "build --force #{@spec.name}", dir: lib_path
         else
-          @context.gem_command "build #{@spec.name}", :dir => lib_path
+          @context.gem_command "build #{@spec.name}", dir: lib_path
         end
 
         gem_path = File.expand_path("#{@spec.full_name}.gem", lib_path)
         if opts[:to_system]
-          @context.system_gems gem_path, :default => opts[:default]
+          @context.system_gems gem_path, default: opts[:default]
         elsif opts[:to_bundle]
-          @context.system_gems gem_path, :path => @context.default_bundle_path
+          @context.system_gems gem_path, path: @context.default_bundle_path
         else
           FileUtils.mv(gem_path, destination)
         end
@@ -630,7 +638,7 @@ module Spec
       def _default_files
         @_default_files ||= {
           "lib/#{name}.rb" => "#{Builders.constantize(name)} = '#{version}#{platform_string}'",
-          "plugins.rb" => "",
+          "plugins.rb" => ""
         }
       end
     end

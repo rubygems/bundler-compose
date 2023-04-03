@@ -4,9 +4,7 @@ require_relative "helpers/endpoint"
 
 class EndpointBasicAuthentication < Endpoint
   before do
-    unless env["HTTP_AUTHORIZATION"]
-      halt 401, "Authentication info not supplied"
-    end
+    halt 401, "Authentication info not supplied" unless env["HTTP_AUTHORIZATION"]
   end
 end
 

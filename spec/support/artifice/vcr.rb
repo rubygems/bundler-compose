@@ -3,13 +3,14 @@
 require "net/http"
 require_relative "../path"
 
-CASSETTE_PATH = "#{Spec::Path.spec_dir}/support/artifice/vcr_cassettes"
-USED_CASSETTES_PATH = "#{Spec::Path.spec_dir}/support/artifice/used_cassettes.txt"
-CASSETTE_NAME = ENV.fetch("BUNDLER_SPEC_VCR_CASSETTE_NAME") { "realworld" }
+CASSETTE_PATH = "#{Spec::Path.spec_dir}/support/artifice/vcr_cassettes".freeze
+USED_CASSETTES_PATH = "#{Spec::Path.spec_dir}/support/artifice/used_cassettes.txt".freeze
+CASSETTE_NAME = ENV.fetch("BUNDLER_SPEC_VCR_CASSETTE_NAME", "realworld")
 
 class BundlerVCRHTTP < Net::HTTP
   class RequestHandler
     attr_reader :http, :request, :body, :response_block
+
     def initialize(http, request, body = nil, &response_block)
       @http = http
       @request = request
@@ -24,7 +25,9 @@ class BundlerVCRHTTP < Net::HTTP
       end
 
       File.open(USED_CASSETTES_PATH, "a+") do |f|
-        f.puts request_pair_paths.map {|path| Pathname.new(path).relative_path_from(Spec::Path.source_root).to_s }.join("\n")
+        f.puts request_pair_paths.map { |path|
+                 Pathname.new(path).relative_path_from(Spec::Path.source_root).to_s
+               }.join("\n")
       end
 
       if recorded_response?
@@ -36,7 +39,8 @@ class BundlerVCRHTTP < Net::HTTP
 
     def recorded_response?
       return true if ENV["BUNDLER_SPEC_PRE_RECORDED"]
-      request_pair_paths.all? {|f| File.exist?(f) }
+
+      request_pair_paths.all? { |f| File.exist?(f) }
     end
 
     def recorded_response
@@ -74,7 +78,7 @@ class BundlerVCRHTTP < Net::HTTP
     end
 
     def file_name_for_key(key)
-      File.join(*key).gsub(/[\:*?"<>|]/, "-")
+      File.join(*key).gsub(/[:*?"<>|]/, "-")
     end
 
     def request_pair_paths
@@ -117,13 +121,14 @@ class BundlerVCRHTTP < Net::HTTP
     end
 
     def binwrite(path, contents)
-      File.open(path, "wb:ASCII-8BIT") {|f| f.write(contents) }
+      File.open(path, "wb:ASCII-8BIT") { |f| f.write(contents) }
     end
   end
 
   def start_with_vcr
     if ENV["BUNDLER_SPEC_PRE_RECORDED"]
       raise IOError, "HTTP session already opened" if @started
+
       @socket = nil
       @started = true
     else
@@ -131,8 +136,8 @@ class BundlerVCRHTTP < Net::HTTP
     end
   end
 
-  alias_method :start_without_vcr, :start
-  alias_method :start, :start_with_vcr
+  alias start_without_vcr start
+  alias start start_with_vcr
 
   def request_with_vcr(request, *args, &block)
     handler = request.instance_eval do
@@ -142,8 +147,8 @@ class BundlerVCRHTTP < Net::HTTP
     handler.handle_request
   end
 
-  alias_method :request_without_vcr, :request
-  alias_method :request, :request_with_vcr
+  alias request_without_vcr request
+  alias request request_with_vcr
 end
 
 require_relative "helpers/artifice"

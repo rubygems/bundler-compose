@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "English"
 require_relative "path"
 
 $LOAD_PATH.unshift(Spec::Path.source_lib_dir.to_s)
@@ -119,7 +120,9 @@ module Spec
 
     def gem_activate(gem_name)
       require "bundler"
-      gem_requirement = Bundler::LockfileParser.new(File.read(dev_lockfile)).specs.find {|spec| spec.name == gem_name }.version
+      gem_requirement = Bundler::LockfileParser.new(File.read(dev_lockfile)).specs.find do |spec|
+        spec.name == gem_name
+      end.version
       gem gem_name, gem_requirement
     end
 
@@ -138,7 +141,7 @@ module Spec
       end
 
       system(Gem.ruby, File.expand_path("support/bundle.rb", Path.spec_dir), "install", "--verbose")
-      raise "bundle install failed" unless $?.success?
+      raise "bundle install failed" unless $CHILD_STATUS.success?
     ensure
       if path
         ENV["BUNDLE_PATH"] = old_path

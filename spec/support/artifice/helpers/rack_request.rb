@@ -27,8 +27,7 @@ module Artifice
       @newimpl = true
 
       # We don't need to connect, so blank out this method
-      def connect
-      end
+      def connect; end
 
       # Replace the Net::HTTP request method with a method
       # that converts the request into a Rack request and
@@ -56,7 +55,7 @@ module Artifice
         body_stream_contents = req.body_stream.read if req.body_stream
 
         response = rack_request.request("#{prefix}#{req.path}",
-          { :method => req.method, :input => body || req.body || body_stream_contents })
+                                        { method: req.method, input: body || req.body || body_stream_contents })
 
         make_net_http_response(response, &block)
       end

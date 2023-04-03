@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 module Bundler
   module Compose
     class Composer
       attr_reader :definition
 
-      def initialize(comment, definition, gems_to_add, gemfiles_to_eval, gemfile)
+      def initialize(comment, definition, gems_to_add, _gemfiles_to_eval, gemfile)
         @comment = comment
         @definition = definition
         @gems_to_add = gems_to_add
@@ -18,7 +20,7 @@ module Bundler
           commented(composed_gems, "Composed dependencies"),
           commented(composed_gemfiles, ""),
           commented(explicit_deps, "Original deps from gemfile"),
-          commented(implicit_deps, "Deps from Gemfile.lock"),
+          commented(implicit_deps, "Deps from Gemfile.lock")
         ].compact.map { Array(_1).join("\n") }.join("\n\n") << "\n"
       end
 
@@ -54,21 +56,22 @@ module Bundler
         dependency_names = @definition.dependencies.group_by(&:name)
         dependencies_to_gemfile(@definition.resolve.map do |s|
           next if dependency_names.key?(s.name)
-          Bundler::Dependency.new(s.name, s.version, 'platform' => s.platform, 'source' => s.source, 'group' => %i[bundler_compose])
+
+          Bundler::Dependency.new(s.name, s.version, "platform" => s.platform, "source" => s.source,
+                                                     "group" => %i[bundler_compose])
         end.compact)
       end
 
       def dependencies_to_gemfile(dependencies)
-        dependencies.group_by(&:groups).each_key(&:sort!).sort_by(&:first).each_with_object([]) do |(groups, deps), lines|
+        dependencies.group_by(&:groups).each_key(&:sort!).sort_by(&:first).each
+                    .with_object([]) do |(groups, deps), lines|
           groups = nil if groups.empty? || groups == %i[default]
           optional = groups == %i[bundler_compose] ? ", optional: true" : nil
-          if groups
-            lines << "group #{groups.map(&:inspect).join(', ')}#{optional} do"
-          end
-          
+          lines << "group #{groups.map(&:inspect).join(", ")}#{optional} do" if groups
+
           deps.sort_by(&:name).each do |d|
             spec = Bundler.definition.resolve[d.name].first
-            
+
             da = []
             da << "  " if groups
 
@@ -77,35 +80,30 @@ module Bundler
               da << d.name.dump
               if spec
                 da << ", #{Gem::Requirement.new(spec.version).as_list.map(&:inspect).join(", ")}"
-              elsif !d.requirement.none?
+              elsif !d.requirement.none? # rubocop:disable Style/InverseMethods
                 da << ", #{d.requirement.as_list.map(&:inspect).join(", ")}"
               end
             end
 
-            if d.source.nil? && spec
-              da << source_to_options(spec.source)
-            else
-              da << source_to_options(d.source)
+            da << if d.source.nil? && spec
+                    source_to_options(spec.source)
+                  else
+                    source_to_options(d.source)
+                  end
+            da << ", platforms: " << d.platforms.inspect unless d.platforms.empty?
+            if (env = d.instance_variable_get(:@env))
+              da << ", env: " << env.inspect
             end
-            unless d.platforms.empty?
-              da << ', platforms: ' << d.platforms.inspect
-            end
-            if env = d.instance_variable_get(:@env)
-              da << ', env: ' << env.inspect
-            end
-            if req = d.autorequire and !req.empty?
+            if ((req = d.autorequire)) && !req.empty?
               req = req.first if req.size == 1
-              da << ', require: ' << req.inspect
+              da << ", require: " << req.inspect
             end
-            
+
             lines << da.join
           end
-          
-          if groups
-            lines << "end"
-          end
-        end
 
+          lines << "end" if groups
+        end
       end
 
       def source_to_options(source)
@@ -113,9 +111,14 @@ module Bundler
         when nil
           nil
         when Bundler::Source::Rubygems
-          %(, source: #{source.send(:suppress_configured_credentials, source.remotes.first).to_s.dump}) if source.remotes.size == 1
+          if source.remotes.size == 1
+            %(, source: #{source.send(:suppress_configured_credentials,
+                                      source.remotes.first).to_s.dump})
+          end
         when Bundler::Source::Gemspec
-          s = "gemspec path: #{source.options["root_path"].join(source.options["path"]).relative_path_from(@gemfile.dirname).to_path.dump}, " \
+          path = source.options["root_path"].join(source.options["path"])
+                       .relative_path_from(@gemfile.dirname).to_path.dump
+          s = "gemspec path: #{path}, " \
             "name: #{source.options["gemspec"].name.dump}"
           s << ", glob: #{source.options["glob"].dump}" if source.options["glob"]
           s
@@ -126,12 +129,11 @@ module Bundler
 
       def commented(section, comment)
         return unless section
+
         section = Array(section)
         return if section.empty?
 
-        comment = '#' * 80 + "\n" +
-          comment.gsub(/(.{1,#{80 - 4}})(\s+|$)/, "# \\1\n") +
-          '#' * 80
+        comment = "#{"#" * 80}\n#{comment.gsub(/(.{1,#{80 - 4}})(\s+|$)/, "# \\1\n")}#{"#" * 80}"
 
         section.insert(0, comment, nil)
       end

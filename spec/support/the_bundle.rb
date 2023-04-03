@@ -17,7 +17,7 @@ module Spec
     def to_s
       "the bundle"
     end
-    alias_method :inspect, :to_s
+    alias inspect to_s
 
     def locked?
       lockfile.file?
@@ -29,6 +29,7 @@ module Spec
 
     def locked_gems
       raise "Cannot read lockfile if it doesn't exist" unless locked?
+
       Bundler::LockfileParser.new(lockfile.read)
     end
   end

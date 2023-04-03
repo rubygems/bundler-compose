@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Bundler
   module Compose
     class CLI < Bundler::Thor
@@ -15,7 +17,13 @@ module Bundler
         end
 
         def validate_args
-          self.class.handle_argument_error @_initializer.last[:current_command], "must give at least one gem to compose", gem_names, -1 if gem_names.empty?
+          return unless gem_names.empty?
+
+          self.class.handle_argument_error(
+            @_initializer.last[:current_command],
+            "must give at least one gem to compose", gem_names,
+            -1
+          )
         end
 
         def check_equivalence
@@ -23,7 +31,7 @@ module Bundler
         end
 
         def set_path
-          file_name = gem_names.join('_').tr(':', '@')
+          file_name = gem_names.join("_").tr(":", "@")
           @path = Bundler.app_config_path.join("bundler-compose", file_name)
           @gemfile = @path.join("gems.#{file_name}.rb")
           @lockfile = @path.join("gems.#{file_name}.rb.lock")
@@ -31,7 +39,11 @@ module Bundler
         end
 
         def set_comment
-          @comment = "# lockfile:#{Bundler.default_gemfile.relative_path_from(@gemfile.dirname)}:#{Bundler::SharedHelpers.digest(:SHA256).hexdigest Bundler.read_file(Bundler.default_lockfile)}"
+          @comment = [
+            "# lockfile",
+            Bundler.default_gemfile.relative_path_from(@gemfile.dirname),
+            Bundler::SharedHelpers.digest(:SHA256).hexdigest(Bundler.read_file(Bundler.default_lockfile))
+          ].join(":")
         end
 
         def copy_lockfile
@@ -75,7 +87,7 @@ module Bundler
         no_commands do
           def extract_gem_name_and_version(name)
             if /\A(.*):(#{Gem::Requirement::PATTERN_RAW})\z/ =~ name
-              [$1, $2]
+              [::Regexp.last_match(1), ::Regexp.last_match(2)]
             else
               [name]
             end

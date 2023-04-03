@@ -31,7 +31,7 @@ class CompactIndexRateLimited < CompactIndexAPI
     begin
       if RequestCounter.size == 1
         etag_response do
-          gem = gems.find {|g| g.name == params[:name] }
+          gem = gems.find { |g| g.name == params[:name] }
           CompactIndex.info(gem ? gem.versions : [])
         end
       else

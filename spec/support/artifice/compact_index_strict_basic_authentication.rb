@@ -4,14 +4,10 @@ require_relative "helpers/compact_index"
 
 class CompactIndexStrictBasicAuthentication < CompactIndexAPI
   before do
-    unless env["HTTP_AUTHORIZATION"]
-      halt 401, "Authentication info not supplied"
-    end
+    halt 401, "Authentication info not supplied" unless env["HTTP_AUTHORIZATION"]
 
     # Only accepts password == "password"
-    unless env["HTTP_AUTHORIZATION"] == "Basic dXNlcjpwYXNz"
-      halt 403, "Authentication failed"
-    end
+    halt 403, "Authentication failed" unless env["HTTP_AUTHORIZATION"] == "Basic dXNlcjpwYXNz"
   end
 end
 

@@ -5,8 +5,8 @@ require_relative "helpers/compact_index"
 class CompactIndexWrongDependencies < CompactIndexAPI
   get "/info/:name" do
     etag_response do
-      gem = gems.find {|g| g.name == params[:name] }
-      gem.versions.each {|gv| gv.dependencies.clear } if gem
+      gem = gems.find { |g| g.name == params[:name] }
+      gem&.versions&.each { |gv| gv.dependencies.clear }
       CompactIndex.info(gem ? gem.versions : [])
     end
   end

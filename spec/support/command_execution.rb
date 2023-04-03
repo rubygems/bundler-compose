@@ -16,17 +16,19 @@ module Spec
         to_s,
         stdout,
         stderr,
-        exitstatus ? "# $? => #{exitstatus}" : "",
+        exitstatus ? "# $? => #{exitstatus}" : ""
       ].reject(&:empty?).join("\n")
     end
 
     def success?
       return true unless exitstatus
+
       exitstatus == 0
     end
 
     def failure?
       return true unless exitstatus
+
       exitstatus > 0
     end
   end

@@ -9,17 +9,17 @@ module Spec
 
     def platform(*args)
       @platforms ||= []
-      @platforms.concat args.map {|p| Gem::Platform.new(p) }
+      @platforms.concat(args.map { |p| Gem::Platform.new(p) })
     end
 
-    alias_method :platforms, :platform
+    alias platforms platform
 
     def resolve(args = [])
       @platforms ||= ["ruby"]
-      default_source = instance_double("Bundler::Source::Rubygems", :specs => @index, :to_s => "locally install gems")
-      source_requirements = { :default => default_source }
+      default_source = instance_double("Bundler::Source::Rubygems", specs: @index, to_s: "locally install gems")
+      source_requirements = { default: default_source }
       base = args[0] || Bundler::SpecSet.new([])
-      base.each {|ls| ls.source = default_source }
+      base.each { |ls| ls.source = default_source }
       gem_version_promoter = args[1] || Bundler::GemVersionPromoter.new
       originally_locked = args[2] || Bundler::SpecSet.new([])
       unlock = args[3] || []
@@ -27,7 +27,8 @@ module Spec
         name = d.name
         source_requirements[name] = d.source = default_source
       end
-      packages = Bundler::Resolver::Base.new(source_requirements, @deps, base, @platforms, :locked_specs => originally_locked, :unlock => unlock)
+      packages = Bundler::Resolver::Base.new(source_requirements, @deps, base, @platforms,
+                                             locked_specs: originally_locked, unlock:)
       Bundler::Resolver.new(packages, gem_version_promoter).start
     end
 
@@ -120,8 +121,9 @@ module Spec
           platforms "ruby java mswin32 mingw32 x64-mingw32" do |platform|
             next if version == v("1.4.2.1") && platform != pl("x86-mswin32")
             next if version == v("1.4.2") && platform == pl("x86-mswin32")
+
             gem "nokogiri", version, platform do
-              dep "weakling", ">= 0.0.3" if platform =~ pl("java") # rubocop:disable Performance/RegexpMatch
+              dep "weakling", ">= 0.0.3" if platform =~ pl("java")
             end
           end
         end

@@ -12,13 +12,16 @@ class CompactIndexAPI < Endpoint
     def load_spec(name, version, platform, gem_repo)
       full_name = "#{name}-#{version}"
       full_name += "-#{platform}" if platform != "ruby"
-      Marshal.load(Bundler.rubygems.inflate(File.binread(gem_repo.join("quick/Marshal.4.8/#{full_name}.gemspec.rz"))))
+      Bundler.load_marshal(Bundler.rubygems.inflate(File.binread(
+                                                      gem_repo.join("quick/Marshal.4.8/#{full_name}.gemspec.rz")
+                                                    )))
     end
 
     def etag_response
       response_body = yield
       checksum = Digest(:MD5).hexdigest(response_body)
       return if not_modified?(checksum)
+
       headers "ETag" => quote(checksum)
       headers "Surrogate-Control" => "max-age=2592000, stale-while-revalidate=60"
       content_type "text/plain"
@@ -33,6 +36,7 @@ class CompactIndexAPI < Endpoint
       etags = parse_etags(request.env["HTTP_IF_NONE_MATCH"])
 
       return unless etags.include?(checksum)
+
       headers "ETag" => quote(checksum)
       status 304
       body ""
@@ -43,7 +47,7 @@ class CompactIndexAPI < Endpoint
 
       if ranges
         status 206
-        body ranges.map! {|range| slice_body(response_body, range) }.join
+        body ranges.map! { |range| slice_body(response_body, range) }.join
       else
         status 200
         body response_body
@@ -55,7 +59,7 @@ class CompactIndexAPI < Endpoint
     end
 
     def parse_etags(value)
-      value ? value.split(/, ?/).select {|s| s.sub!(/"(.*)"/, '\1') } : []
+      value ? value.split(/, ?/).select { |s| s.sub!(/"(.*)"/, '\1') } : []
     end
 
     def slice_body(body, range)
@@ -67,7 +71,7 @@ class CompactIndexAPI < Endpoint
       @gems[gem_repo] ||= begin
         specs = Bundler::Deprecate.skip_during do
           %w[specs.4.8 prerelease_specs.4.8].map do |filename|
-            Marshal.load(File.open(gem_repo.join(filename)).read).map do |name, version, platform|
+            Bundler.load_marshal(File.open(gem_repo.join(filename)).read).map do |name, version, platform|
               load_spec(name, version, platform, gem_repo)
             end
           end.flatten
@@ -75,17 +79,17 @@ class CompactIndexAPI < Endpoint
 
         specs.group_by(&:name).map do |name, versions|
           gem_versions = versions.map do |spec|
-            deps = spec.dependencies.select {|d| d.type == :runtime }.map do |d|
-              reqs = d.requirement.requirements.map {|r| r.join(" ") }.join(", ")
+            deps = spec.dependencies.select { |d| d.type == :runtime }.map do |d|
+              reqs = d.requirement.requirements.map { |r| r.join(" ") }.join(", ")
               CompactIndex::Dependency.new(d.name, reqs)
             end
             checksum = begin
-                         Digest(:SHA256).file("#{gem_repo}/gems/#{spec.original_name}.gem").base64digest
-                       rescue StandardError
-                         nil
-                       end
+              Digest(:SHA256).file("#{gem_repo}/gems/#{spec.original_name}.gem").base64digest
+            rescue StandardError
+              nil
+            end
             CompactIndex::GemVersion.new(spec.version.version, spec.platform.to_s, checksum, nil,
-              deps, spec.required_ruby_version.to_s, spec.required_rubygems_version.to_s)
+                                         deps, spec.required_ruby_version.to_s, spec.required_rubygems_version.to_s)
           end
           CompactIndex::Gem.new(name, gem_versions)
         end
@@ -111,7 +115,7 @@ class CompactIndexAPI < Endpoint
 
   get "/info/:name" do
     etag_response do
-      gem = gems.find {|g| g.name == params[:name] }
+      gem = gems.find { |g| g.name == params[:name] }
       CompactIndex.info(gem ? gem.versions : [])
     end
   end

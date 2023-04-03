@@ -14,6 +14,7 @@ class EndpointCredsDiffHost < Endpoint
 
     def protected!
       return if authorized?
+
       response["WWW-Authenticate"] = %(Basic realm="Testing HTTP Auth")
       throw(:halt, [401, "Not authorized\n"])
     end
@@ -28,9 +29,7 @@ class EndpointCredsDiffHost < Endpoint
   end
 
   get "/no/creds/:id" do
-    if request.host.include?("diffhost") && !auth.provided?
-      File.binread("#{gem_repo1}/gems/#{params[:id]}")
-    end
+    File.binread("#{gem_repo1}/gems/#{params[:id]}") if request.host.include?("diffhost") && !auth.provided?
   end
 end
 

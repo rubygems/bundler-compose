@@ -26,20 +26,23 @@ class RubygemsVersionManager
     at_exit do
       rubylibdir = RbConfig::CONFIG["rubylibdir"]
 
-      rubygems_path = rubylibdir + "/rubygems"
-      rubygems_default_path = rubygems_path + "/defaults"
+      rubygems_path = "#{rubylibdir}/rubygems"
+      rubygems_default_path = "#{rubygems_path}/defaults"
 
-      bundler_path = rubylibdir + "/bundler"
-      bundler_exemptions = Gem.rubygems_version < Gem::Version.new("3.2.0") ? [bundler_path + "/errors.rb"] : []
+      bundler_path = "#{rubylibdir}/bundler"
+      bundler_exemptions = Gem.rubygems_version < Gem::Version.new("3.2.0") ? ["#{bundler_path}/errors.rb"] : []
 
       bad_loaded_features = $LOADED_FEATURES.select do |loaded_feature|
         (loaded_feature.start_with?(rubygems_path) && !loaded_feature.start_with?(rubygems_default_path)) ||
-          (loaded_feature.start_with?(bundler_path) && !bundler_exemptions.any? {|bundler_exemption| loaded_feature.start_with?(bundler_exemption) })
+          (loaded_feature.start_with?(bundler_path) && bundler_exemptions.none? do |bundler_exemption|
+             loaded_feature.start_with?(bundler_exemption)
+           end)
       end
 
       errors = if bad_loaded_features.any?
-        all_commands_output + "the following features were incorrectly loaded:\n#{bad_loaded_features.join("\n")}"
-      end
+                 all_commands_output + \
+                   "the following features were incorrectly loaded:\n#{bad_loaded_features.join("\n")}"
+               end
 
       raise errors if errors
     end
@@ -56,7 +59,7 @@ class RubygemsVersionManager
 
     require "rbconfig"
 
-    cmd = [RbConfig.ruby, $0, *ARGV].compact
+    cmd = [RbConfig.ruby, $PROGRAM_NAME, *ARGV].compact
 
     ENV["RUBYOPT"] = opt_add("-I#{local_copy_path.join("lib")}", opt_remove("--disable-gems", ENV["RUBYOPT"]))
 
@@ -66,7 +69,7 @@ class RubygemsVersionManager
   def switch_local_copy_if_needed
     return unless local_copy_switch_needed?
 
-    sys_exec("git checkout #{target_tag}", :dir => local_copy_path)
+    sys_exec("git checkout #{target_tag}", dir: local_copy_path)
 
     ENV["RGV"] = local_copy_path.to_s
   end
@@ -85,7 +88,7 @@ class RubygemsVersionManager
   end
 
   def local_copy_tag
-    sys_exec("git rev-parse --abbrev-ref HEAD", :dir => local_copy_path)
+    sys_exec("git rev-parse --abbrev-ref HEAD", dir: local_copy_path)
   end
 
   def local_copy_path
@@ -97,9 +100,7 @@ class RubygemsVersionManager
 
     rubygems_path = source_root.join("tmp/rubygems")
 
-    unless rubygems_path.directory?
-      sys_exec("git clone .. #{rubygems_path}", :dir => source_root)
-    end
+    sys_exec("git clone .. #{rubygems_path}", dir: source_root) unless rubygems_path.directory?
 
     rubygems_path
   end

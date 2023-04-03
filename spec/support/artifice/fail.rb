@@ -8,17 +8,16 @@ class Fail < Net::HTTP
   # Net::HTTP, we must set it
   @newimpl = true
 
-  def request(req, body = nil, &block)
+  def request(req, _body = nil)
     raise(exception(req))
   end
 
   # Ensure we don't start a connect here
-  def connect
-  end
+  def connect; end
 
   def exception(req)
-    name = ENV.fetch("BUNDLER_SPEC_EXCEPTION") { "Errno::ENETUNREACH" }
-    const = name.split("::").reduce(Object) {|mod, sym| mod.const_get(sym) }
+    name = ENV.fetch("BUNDLER_SPEC_EXCEPTION", "Errno::ENETUNREACH")
+    const = name.split("::").reduce(Object) { |mod, sym| mod.const_get(sym) }
     const.new("host down: Bundler spec artifice fail! #{req["PATH_INFO"]}")
   end
 end

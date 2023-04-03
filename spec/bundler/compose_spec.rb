@@ -17,7 +17,7 @@ RSpec.describe Bundler::Compose do
 
       expect(the_bundle).to match_fs(
         "Gemfile" => exist,
-        "Gemfile.lock" => read_as(<<~LOCKFILE),
+        "Gemfile.lock" => read_as(<<~LOCKFILE)
           GEM
             remote: file://#{gem_repo1}/
             specs:
@@ -94,7 +94,7 @@ RSpec.describe Bundler::Compose do
         LOCKFILE
 
         "Gemfile" => exist,
-        "Gemfile.lock" => exist,
+        "Gemfile.lock" => exist
       )
 
       bundle "compose gems rails"
@@ -112,7 +112,7 @@ RSpec.describe Bundler::Compose do
 
       expect(the_bundle).to match_fs(
         "Gemfile" => exist,
-        "Gemfile.lock" => read_as(<<~LOCKFILE),
+        "Gemfile.lock" => read_as(<<~LOCKFILE)
           GEM
             remote: file://#{gem_repo1}/
             specs:
@@ -194,7 +194,7 @@ RSpec.describe Bundler::Compose do
         LOCKFILE
 
         "Gemfile" => exist,
-        "Gemfile.lock" => exist,
+        "Gemfile.lock" => exist
       )
 
       bundle "compose gems rails"
@@ -202,7 +202,7 @@ RSpec.describe Bundler::Compose do
     end
   end
 
-  context "in an existing bundle" do
+  context "with an existing bundle" do
     it "adds an  existing gem via bundle compose gems" do
       # setup
 
@@ -220,7 +220,7 @@ RSpec.describe Bundler::Compose do
 
       expect(the_bundle).to match_fs(
         "Gemfile" => exist,
-        "Gemfile.lock" => read_as(<<~LOCKFILE),
+        "Gemfile.lock" => read_as(<<~LOCKFILE)
           GEM
             remote: file://#{gem_repo1}/
             specs:
@@ -346,7 +346,7 @@ RSpec.describe Bundler::Compose do
         LOCKFILE
 
         "Gemfile" => exist,
-        "Gemfile.lock" => exist,
+        "Gemfile.lock" => exist
       )
     end
   end

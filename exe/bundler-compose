@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 # Exit cleanly from an early interrupt
 Signal.trap("INT") do
@@ -16,22 +17,22 @@ end
 require "bundler/friendly_errors"
 
 # Bundler.with_friendly_errors do
-  require 'bundler/cli'
+require "bundler/cli"
 
-  help_flags = %w[--help -h]
-  help_flag_used = ARGV.any? {|a| help_flags.include? a }
-  args = help_flag_used ? Bundler::CLI.reformatted_help_args(ARGV) : ARGV
+help_flags = %w[--help -h]
+help_flag_used = ARGV.any? { |a| help_flags.include? a }
+args = help_flag_used ? Bundler::CLI.reformatted_help_args(ARGV) : ARGV
 
-  # pc = Bundler::CLI.send :remove_const, :PARSEABLE_COMMANDS
-  # Bundler::CLI::PARSEABLE_COMMANDS = (pc + ["compose"]).freeze
+# pc = Bundler::CLI.send :remove_const, :PARSEABLE_COMMANDS
+# Bundler::CLI::PARSEABLE_COMMANDS = (pc + ["compose"]).freeze
 
-  Bundler.ui.level = "error"
+Bundler.ui.level = "error"
 
-  Bundler::CLI.register Bundler::Compose::CLI, :compose, "compose", "Runs the thing"
-  Bundler::CLI.check_unknown_options[:except] << :compose
-  Bundler::CLI.stop_on_unknown_option! :compose
-  Bundler::Thor.singleton_class.define_method(:basename) { "bundle" }
+Bundler::CLI.register Bundler::Compose::CLI, :compose, "compose", "Runs the thing"
+Bundler::CLI.check_unknown_options[:except] << :compose
+Bundler::CLI.stop_on_unknown_option! :compose
+Bundler::Thor.singleton_class.define_method(:basename) { "bundle" }
 
 # Bundler.with_friendly_errors do
-  Bundler::CLI.start %w[compose] + args, debug: true
+Bundler::CLI.start %w[compose] + args, debug: true
 # end

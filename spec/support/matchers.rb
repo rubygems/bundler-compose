@@ -11,12 +11,12 @@ module Spec
       include RSpec::Matchers::Composable
       extend Forwardable
       def_delegators :failing_matcher,
-        :failure_message,
-        :actual,
-        :description,
-        :diffable?,
-        :expected,
-        :failure_message_when_negated
+                     :failure_message,
+                     :actual,
+                     :description,
+                     :diffable?,
+                     :expected,
+                     :failure_message_when_negated
 
       def initialize(matcher, preconditions)
         @matcher = with_matchers_cloned(matcher)
@@ -25,12 +25,14 @@ module Spec
       end
 
       def matches?(target, &blk)
-        return false if @failure_index = @preconditions.index {|pc| !pc.matches?(target, &blk) }
+        return false if (@failure_index = @preconditions.index { |pc| !pc.matches?(target, &blk) })
+
         @matcher.matches?(target, &blk)
       end
 
       def does_not_match?(target, &blk)
-        return false if @failure_index = @preconditions.index {|pc| !pc.matches?(target, &blk) }
+        return false if (@failure_index = @preconditions.index { |pc| !pc.matches?(target, &blk) })
+
         if @matcher.respond_to?(:does_not_match?)
           @matcher.does_not_match?(target, &blk)
         else
@@ -53,6 +55,7 @@ module Spec
 
     def self.define_compound_matcher(matcher, preconditions, &declarations)
       raise "Must have preconditions to define a compound matcher" if preconditions.empty?
+
       define_method(matcher) do |*expected, &block_arg|
         Precondition.new(
           RSpec::Matchers::DSL::Matcher.new(matcher, declarations, self, *expected, &block_arg),
@@ -65,19 +68,20 @@ module Spec
       dep = Bundler::Dependency.new(*args)
 
       match do |actual|
-        actual.length == 1 && actual.all? {|d| d == dep }
+        actual.length == 1 && actual.all? { |d| d == dep }
       end
     end
 
     RSpec::Matchers.define :have_gem do |*args|
       match do |actual|
-        actual.length == args.length && actual.all? {|a| args.include?(a.full_name) }
+        actual.length == args.length && actual.all? { |a| args.include?(a.full_name) }
       end
     end
 
     RSpec::Matchers.define :be_sorted do
       diffable
       attr_reader :expected
+
       match do |actual|
         expected = block_arg ? actual.sort_by(&block_arg) : actual.sort
         actual.==(expected).tap do
@@ -127,7 +131,7 @@ module Spec
             next if path.directory?
 
             k = path.relative_path_from(actual.bundle_dir).to_s
-            next unexpected << k unless m = e.delete(k)
+            next unexpected << k unless (m = e.delete(k))
 
             expect(path).to m
           end
@@ -183,6 +187,7 @@ module Spec
             end
           R
           next if exitstatus == 0
+
           if exitstatus == 64
             actual_version = out.split("\n").last
             next "#{name} was expected to be at version #{version} but was #{actual_version}"
@@ -230,6 +235,7 @@ module Spec
           next if exitstatus == 0
           next "command to check version of #{name} installed failed" unless exitstatus == 64
           next "expected #{name} to not be installed, but it was" if version.nil?
+
           next "expected #{name} (#{version}) not to be installed, but it was"
         end.compact
 
@@ -237,11 +243,11 @@ module Spec
       end
 
       failure_message do
-        super() + " but:\n" + @errors.map {|e| indent(e) }.join("\n")
+        super() + " but:\n#{@errors.map { |e| indent(e) }.join("\n")}"
       end
 
       failure_message_when_negated do
-        super() + " but:\n" + @errors.map {|e| indent(e) }.join("\n")
+        super() + " but:\n#{@errors.map { |e| indent(e) }.join("\n")}"
       end
     end
     RSpec::Matchers.define_negated_matcher :not_include_gems, :include_gems
@@ -251,7 +257,7 @@ module Spec
       names.each do |name|
         expect(Bundler::Plugin).to be_installed(name)
         path = Pathname.new(Bundler::Plugin.installed?(name))
-        expect(path + "plugins.rb").to exist
+        expect("#{path}plugins.rb").to exist
       end
     end
 

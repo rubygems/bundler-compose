@@ -4,9 +4,7 @@ require_relative "helpers/endpoint_marshal_fail"
 
 class EndpointMarshalFailBasicAuthentication < EndpointMarshalFail
   before do
-    unless env["HTTP_AUTHORIZATION"]
-      halt 401, "Authentication info not supplied"
-    end
+    halt 401, "Authentication info not supplied" unless env["HTTP_AUTHORIZATION"]
   end
 end
 

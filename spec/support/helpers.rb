@@ -11,6 +11,7 @@ module Spec
     def reset!
       Dir.glob("#{tmp}/{gems/*,*}", File::FNM_DOTMATCH).each do |dir|
         next if %w[base base_system remote1 rubocop standard gems rubygems . ..].include?(File.basename(dir))
+
         FileUtils.rm_rf(dir)
       end
       FileUtils.mkdir_p(home)
@@ -43,14 +44,14 @@ module Spec
       last_command.stderr
     end
 
-    MAJOR_DEPRECATION = /^\[DEPRECATED\]\s*/.freeze
+    MAJOR_DEPRECATION = /^\[DEPRECATED\]\s*/
 
     def err_without_deprecations
-      err.gsub(/#{MAJOR_DEPRECATION}.+[\n]?/, "")
+      err.gsub(/#{MAJOR_DEPRECATION}.+\n?/, "")
     end
 
     def deprecations
-      err.split("\n").select {|l| l =~ MAJOR_DEPRECATION }.join("\n").split(MAJOR_DEPRECATION)
+      err.split("\n").select { |l| l =~ MAJOR_DEPRECATION }.join("\n").split(MAJOR_DEPRECATION)
     end
 
     def exitstatus
@@ -93,9 +94,7 @@ module Spec
           "fail"
         end
       end
-      if artifice
-        requires << "#{Path.spec_dir}/support/artifice/#{artifice}.rb"
-      end
+      requires << "#{Path.spec_dir}/support/artifice/#{artifice}.rb" if artifice
 
       load_path = []
       load_path << spec_dir
@@ -116,9 +115,9 @@ module Spec
         end
       end.join
 
-      ruby_cmd = build_ruby_cmd({ :load_path => load_path, :requires => requires })
+      ruby_cmd = build_ruby_cmd({ load_path:, requires: })
       cmd = "#{ruby_cmd} #{bundle_bin} #{cmd}#{args}"
-      sys_exec(cmd, { :env => env, :dir => dir, :raise_on_error => raise_on_error }, &block)
+      sys_exec(cmd, { env:, dir:, raise_on_error: }, &block)
     end
 
     def bundler(cmd, options = {})
@@ -132,7 +131,7 @@ module Spec
       sys_exec(%(#{ruby_cmd} -w -e #{escaped_ruby}), options)
     end
 
-    def load_error_ruby(ruby, name, opts = {})
+    def load_error_ruby(ruby, name, _opts = {})
       ruby(<<-R)
         begin
           #{ruby}
@@ -148,9 +147,10 @@ module Spec
 
       requires = options.delete(:requires) || []
       requires << "#{Path.spec_dir}/support/hax.rb"
-      require_option = requires.map {|r| "-r#{r}" }
+      require_option = requires.map { |r| "-r#{r}" }
 
-      ["env", "RUBYOPT=#{lib_option} #{require_option.join(" ")} #{ENV["RUBYOPT"]}", Gem.ruby, *lib_option, *require_option].compact.shelljoin
+      ["env", "RUBYOPT=#{lib_option} #{require_option.join(" ")} #{ENV["RUBYOPT"]}", Gem.ruby, *lib_option,
+       *require_option].compact.shelljoin
     end
 
     def gembin(cmd, options = {})
@@ -170,7 +170,7 @@ module Spec
     end
 
     def git(cmd, path, options = {})
-      sys_exec("git #{cmd}", options.merge(:dir => path))
+      sys_exec("git #{cmd}", options.merge(dir: path))
     end
 
     def sys_exec(cmd, options = {})
@@ -181,7 +181,7 @@ module Spec
 
       require "open3"
       require "shellwords"
-      Open3.popen3(env, *cmd.shellsplit, :chdir => dir) do |stdin, stdout, stderr, wait_thr|
+      Open3.popen3(env, *cmd.shellsplit, chdir: dir) do |stdin, stdout, stderr, wait_thr|
         yield stdin, stdout, wait_thr if block_given?
         stdin.close
 
@@ -192,10 +192,10 @@ module Spec
 
         status = wait_thr.value
         command_execution.exitstatus = if status.exited?
-          status.exitstatus
-        elsif status.signaled?
-          exit_status_for_signal(status.termsig)
-        end
+                                         status.exitstatus
+                                       elsif status.signaled?
+                                         exit_status_for_signal(status.termsig)
+                                       end
       end
 
       unless options[:raise_on_error] == false || command_execution.success?
@@ -221,6 +221,7 @@ module Spec
 
     def config(config = nil, path = bundled_app(".bundle/config"))
       return Psych.load_file(path) unless config
+
       FileUtils.mkdir_p(File.dirname(path))
       File.open(path, "w") do |f|
         f.puts config.to_yaml
@@ -288,17 +289,17 @@ module Spec
         gems.each do |g|
           gem_name = g.to_s
           if gem_name == "bundler-compose"
-            with_built_bundler_compose {|gem_path| install_gem(gem_path, default) }
+            with_built_bundler_compose { |gem_path| install_gem(gem_path, default:) }
           elsif %r{\A(?:[a-zA-Z]:)?/.*\.gem\z}.match?(gem_name)
-            install_gem(gem_name, default)
+            install_gem(gem_name, default:)
           else
-            install_gem("#{gem_repo}/gems/#{gem_name}.gem", default)
+            install_gem("#{gem_repo}/gems/#{gem_name}.gem", default:)
           end
         end
       end
     end
 
-    def install_gem(path, default = false)
+    def install_gem(path, default: false)
       raise "OMG `#{path}` does not exist!" unless File.exist?(path)
 
       args = "--no-document --ignore-dependencies"
@@ -320,12 +321,12 @@ module Spec
           target_shipped_file = build_path + shipped_file
           target_shipped_dir = File.dirname(target_shipped_file)
           FileUtils.mkdir_p target_shipped_dir unless File.directory?(target_shipped_dir)
-          FileUtils.cp shipped_file, target_shipped_file, :preserve => true
+          FileUtils.cp shipped_file, target_shipped_file, preserve: true
         end
 
         File.write build_path + relative_gemspec, loaded_gemspec.to_ruby
 
-        gem_command "build #{relative_gemspec}", :dir => build_path
+        gem_command "build #{relative_gemspec}", dir: build_path
 
         yield(bundler_path)
       ensure
@@ -358,10 +359,8 @@ module Spec
       ENV.replace(backup)
     end
 
-    def with_path_added(path)
-      with_path_as([path.to_s, ENV["PATH"]].join(File::PATH_SEPARATOR)) do
-        yield
-      end
+    def with_path_added(path, &)
+      with_path_as([path.to_s, ENV["PATH"]].join(File::PATH_SEPARATOR), &)
     end
 
     def opt_add(option, options)
@@ -371,7 +370,7 @@ module Spec
     def opt_remove(option, options)
       return unless options
 
-      options.split(" ").reject {|opt| opt.strip == option.strip }.join(" ")
+      options.split(" ").reject { |opt| opt.strip == option.strip }.join(" ")
     end
 
     def break_git!
@@ -383,14 +382,14 @@ module Spec
       ENV["PATH"] = "#{tmp("broken_path")}:#{ENV["PATH"]}"
     end
 
-    def with_fake_man
+    def with_fake_man(&block)
       skip "fake_man is not a Windows friendly binstub" if Gem.win_platform?
 
       FileUtils.mkdir_p(tmp("fake_man"))
       File.open(tmp("fake_man/man"), "w", 0o755) do |f|
         f.puts "#!/usr/bin/env ruby\nputs ARGV.inspect\n"
       end
-      with_path_added(tmp("fake_man")) { yield }
+      with_path_added(tmp("fake_man"), &block)
     end
 
     def pristine_system_gems(*gems)
@@ -420,6 +419,7 @@ module Spec
       gems.each do |g|
         path = "#{gem_repo}/gems/#{g}.gem"
         raise "OMG `#{path}` does not exist!" unless File.exist?(path)
+
         FileUtils.cp(path, "#{bundled_app}/vendor/cache")
       end
     end
@@ -445,13 +445,11 @@ module Spec
       ENV["BUNDLER_SPEC_PLATFORM"] = old if block_given?
     end
 
-    def simulate_windows(platform = x86_mswin32)
+    def simulate_windows(platform = x86_mswin32, &block)
       old = ENV["BUNDLER_SPEC_WINDOWS"]
       ENV["BUNDLER_SPEC_WINDOWS"] = "true"
       simulate_platform platform do
-        simulate_bundler_version_when_missing_prerelease_default_gem_activation do
-          yield
-        end
+        simulate_bundler_version_when_missing_prerelease_default_gem_activation(&block)
       end
     ensure
       ENV["BUNDLER_SPEC_WINDOWS"] = old
@@ -476,17 +474,17 @@ module Spec
     end
 
     def current_ruby_minor
-      Gem.ruby_version.segments.tap {|s| s.delete_at(2) }.join(".")
+      Gem.ruby_version.segments.tap { |s| s.delete_at(2) }.join(".")
     end
 
     def next_ruby_minor
-      ruby_major_minor.map.with_index {|s, i| i == 1 ? s + 1 : s }.join(".")
+      ruby_major_minor.map.with_index { |s, i| i == 1 ? s + 1 : s }.join(".")
     end
 
     def previous_ruby_minor
       return "2.7" if ruby_major_minor == [3, 0]
 
-      ruby_major_minor.map.with_index {|s, i| i == 1 ? s - 1 : s }.join(".")
+      ruby_major_minor.map.with_index { |s, i| i == 1 ? s - 1 : s }.join(".")
     end
 
     def ruby_major_minor
@@ -500,7 +498,7 @@ module Spec
     end
 
     def revision_for(path)
-      sys_exec("git rev-parse HEAD", :dir => path).strip
+      sys_exec("git rev-parse HEAD", dir: path).strip
     end
 
     def with_read_only(pattern)
@@ -522,22 +520,20 @@ module Spec
       process_file(pathname) do |line|
         case line
         when /spec\.metadata\["(?:allowed_push_host|homepage_uri|source_code_uri|changelog_uri)"\]/, /spec\.homepage/
-          line.gsub(/\=.*$/, '= "http://example.org"')
+          line.gsub(/=.*$/, '= "http://example.org"')
         when /spec\.summary/
-          line.gsub(/\=.*$/, '= "A short summary of my new gem."')
+          line.gsub(/=.*$/, '= "A short summary of my new gem."')
         when /spec\.description/
-          line.gsub(/\=.*$/, '= "A longer description of my new gem."')
+          line.gsub(/=.*$/, '= "A longer description of my new gem."')
         else
           line
         end
       end
     end
 
-    def process_file(pathname)
-      changed_lines = pathname.readlines.map do |line|
-        yield line
-      end
-      File.open(pathname, "w") {|file| file.puts(changed_lines.join) }
+    def process_file(pathname, &block)
+      changed_lines = pathname.readlines.map(&block)
+      File.open(pathname, "w") { |file| file.puts(changed_lines.join) }
     end
 
     def with_env_vars(env_hash, &block)
@@ -566,6 +562,7 @@ module Spec
       TCPSocket.new(host, port)
     rescue StandardError => e
       raise(e) if tries > (seconds * 2)
+
       tries += 1
       retry
     end

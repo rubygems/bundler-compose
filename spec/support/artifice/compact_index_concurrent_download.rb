@@ -5,7 +5,7 @@ require_relative "helpers/compact_index"
 class CompactIndexConcurrentDownload < CompactIndexAPI
   get "/versions" do
     versions = File.join(Bundler.rubygems.user_home, ".bundle", "cache", "compact_index",
-      "localgemserver.test.80.dd34752a738ee965a2a4298dc16db6c5", "versions")
+                         "localgemserver.test.80.dd34752a738ee965a2a4298dc16db6c5", "versions")
 
     # Verify the original (empty) content hasn't been deleted, e.g. on a retry
     File.binread(versions) == "" || raise("Original file should be present and empty")
@@ -15,7 +15,7 @@ class CompactIndexConcurrentDownload < CompactIndexAPI
 
     # Overwrite the file in parallel, which should be then overwritten
     # after a successful download to prevent corruption
-    File.open(versions, "w") {|f| f.puts "another process" }
+    File.open(versions, "w") { |f| f.puts "another process" }
 
     etag_response do
       file = tmp("versions.list")

@@ -18,9 +18,9 @@ end
 
 # BELOW: copied from bundler
 
-
-if File.expand_path(__FILE__) =~ %r{([^\w/\.:\-])}
-  abort "The bundler specs cannot be run from a path that contains special characters (particularly #{$1.inspect})"
+if File.expand_path(__FILE__) =~ %r{([^\w/.:-])}
+  abort "The bundler specs cannot be run from a path that contains special characters " \
+  "(particularly #{Regexp.last_match(1).inspect})"
 end
 
 require "bundler"
@@ -37,7 +37,6 @@ require_relative "support/indexes"
 require_relative "support/matchers"
 require_relative "support/permissions"
 require_relative "support/platforms"
-
 
 RSpec.configure do |config|
   config.include Spec::Builders
@@ -82,8 +81,16 @@ RSpec.configure do |config|
     ENV["THOR_COLUMNS"] = "10000"
 
     extend(Spec::Helpers)
-    bundler = Dir[File.join(base_system_gems, "**/bundler-*.gem")].first || Gem.loaded_specs['bundler'].cache_file || raise("No bundler found in #{base_system_gems}")
-    system_gems bundler, "bundler-compose", :path => pristine_system_gem_path
+    begin
+      bundler = Dir[File.join(base_system_gems, "**/bundler-*.gem")].first || \
+                Gem.loaded_specs["bundler"].cache_file || \
+                raise("No bundler found in #{base_system_gems}")
+      system_gems bundler, "bundler-compose", path: pristine_system_gem_path
+    rescue StandardError
+      warn "Run `ruby -Ispec -rsupport/rubygems_ext -e 'Spec::Rubygems.install_test_deps'` to install deps"
+      warn "Run specs via bin/rspec"
+      raise
+    end
   end
 
   config.before :all do
@@ -94,7 +101,7 @@ RSpec.configure do |config|
     reset_paths!
   end
 
-  config.around :each do |example|
+  config.around do |example|
     FileUtils.cp_r pristine_system_gem_path, system_gem_path
 
     with_gem_path_as(system_gem_path) do
@@ -102,8 +109,8 @@ RSpec.configure do |config|
 
       all_output = all_commands_output
       if example.exception && !all_output.empty?
-        message = all_output + "\n" + example.exception.message
-        summary = all_output + "\n\n" + example.exception.summary if example.exception.respond_to?(:summary)
+        message = "#{all_output}\n#{example.exception.message}"
+        summary = "#{all_output}\n\n#{example.exception.summary}" if example.exception.respond_to?(:summary)
         example.exception.singleton_class.send(:define_method, :summary) { summary }
         (class << example.exception; self; end).send(:define_method, :message) do
           message
@@ -118,4 +125,3 @@ RSpec.configure do |config|
     FileUtils.rm_rf Spec::Path.pristine_system_gem_path
   end
 end
-

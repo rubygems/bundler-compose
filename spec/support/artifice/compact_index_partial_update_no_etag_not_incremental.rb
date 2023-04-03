@@ -16,7 +16,7 @@ class CompactIndexPartialUpdateNoEtagNotIncremental < CompactIndexAPI
       FileUtils.rm_f(file)
       file = CompactIndex::VersionsFile.new(file.to_s)
       file.create(gems)
-      lines = file.contents([], :calculate_info_checksums => true).split("\n")
+      lines = file.contents([], calculate_info_checksums: true).split("\n")
       name, versions, checksum = lines.last.split(" ")
 
       # shuffle versions so new versions are not appended to the end
@@ -26,7 +26,7 @@ class CompactIndexPartialUpdateNoEtagNotIncremental < CompactIndexAPI
 
   get "/info/:name" do
     partial_update_no_etag do
-      gem = gems.find {|g| g.name == params[:name] }
+      gem = gems.find { |g| g.name == params[:name] }
       lines = CompactIndex.info(gem ? gem.versions : []).split("\n")
 
       # shuffle versions so new versions are not appended to the end

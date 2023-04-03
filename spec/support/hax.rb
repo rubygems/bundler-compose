@@ -10,9 +10,7 @@ module Gem
     @ruby = ruby
   end
 
-  if ENV["RUBY"]
-    Gem.ruby = ENV["RUBY"]
-  end
+  Gem.ruby = ENV["RUBY"] if ENV["RUBY"]
 
   if ENV["BUNDLER_GEM_DEFAULT_DIR"]
     @default_dir = ENV["BUNDLER_GEM_DEFAULT_DIR"]
@@ -30,14 +28,12 @@ module Gem
     @platforms = [Gem::Platform::RUBY, Gem::Platform.local]
   end
 
-  if ENV["BUNDLER_SPEC_GEM_SOURCES"]
-    self.sources = [ENV["BUNDLER_SPEC_GEM_SOURCES"]]
-  end
+  self.sources = [ENV["BUNDLER_SPEC_GEM_SOURCES"]] if ENV["BUNDLER_SPEC_GEM_SOURCES"]
 
   if ENV["BUNDLER_IGNORE_DEFAULT_GEM"]
     module RemoveDefaultBundlerStub
       def default_stubs(pattern = "*")
-        super.delete_if {|stub| stub.name == "bundler" }
+        super.delete_if { |stub| stub.name == "bundler" }
       end
     end
 
