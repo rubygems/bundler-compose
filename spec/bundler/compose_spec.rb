@@ -111,7 +111,7 @@ RSpec.describe Bundler::Compose do
 
         ".bundle/bundler-compose/rails/gems.rails.rb.lock" => read_as(<<~LOCKFILE),
           GEM
-            remote: file:///Users/segiddins/Development/github.com/segiddins/bundler-compose/tmp/1/gems/remote1/
+            remote: file://#{gem_repo1}/
             specs:
               actionmailer (2.3.2)
                 activesupport (= 2.3.2)
@@ -279,7 +279,7 @@ RSpec.describe Bundler::Compose do
 
         ".bundle/bundler-compose/gems.devtools.rb/gems.gems.devtools.rb.rb.lock" => read_as(<<~LOCKFILE),
           GEM
-            remote: file:///Users/segiddins/Development/github.com/segiddins/bundler-compose/tmp/1/gems/remote1/
+            remote: file://#{gem_repo1}/
             specs:
               rack (1.0.0)
               thin (1.0)
@@ -363,7 +363,7 @@ RSpec.describe Bundler::Compose do
 
         ".bundle/bundler-compose/rails_rack-obama@1/gems.rails_rack-obama@1.rb.lock" => read_as(<<~LOCKFILE),
           GEM
-            remote: file:///Users/segiddins/Development/github.com/segiddins/bundler-compose/tmp/1/gems/remote1/
+            remote: file://#{gem_repo1}/
             specs:
               actionmailer (2.3.2)
                 activesupport (= 2.3.2)
