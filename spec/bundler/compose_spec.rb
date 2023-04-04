@@ -202,6 +202,14 @@ RSpec.describe Bundler::Compose do
       bundle "compose gem argv -- --verbose"
       expect(last_command.stdout.lines(chomp: true)).to eq(%w[--verbose])
 
+      # Needs a change to Bundler::CLI.reformatted_help_args
+      # to not reformat when the command is unknown
+
+      # bundle "compose gem argv -- --help"
+      # expect(last_command.stdout.lines(chomp: true)).to eq(%w[--help])
+      # bundle "compose gem argv --help"
+      # expect(last_command.stdout.lines(chomp: true)).to eq(%w[--help])
+
       bundle "compose gem rack --exec argv argv -- arg1 --opt arg2 --exec rack"
       bundle "compose gem rack --exec argv argv -- arg1 --opt arg2 --exec rack"
       expect(last_command.stdout.lines(chomp: true)).to eq(%w[arg1 --opt arg2 --exec rack])

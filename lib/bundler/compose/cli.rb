@@ -3,6 +3,7 @@
 module Bundler
   module Compose
     class CLI < Bundler::Thor
+      map.reject! { |_, v| v == :help }
       (@class_options ||= {}).merge!(Bundler::CLI.class_options)
 
       module Common

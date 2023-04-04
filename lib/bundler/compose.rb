@@ -8,7 +8,9 @@ require_relative "compose/version"
 
 module Bundler
   module Compose
-    class Error < StandardError; end
+    class Error < BundlerError
+      status_code 99
+    end
     # Your code goes here...
   end
 end
