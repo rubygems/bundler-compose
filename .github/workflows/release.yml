@@ -28,8 +28,6 @@ jobs:
         with:
           ruby-version: 3.2.1
         if: ${{ steps.release.outputs.release_created }}
-      - run: bundle install
-        if: ${{ steps.release.outputs.release_created }}
       - name: publish gem
         run: |
           mkdir -p $HOME/.gem
