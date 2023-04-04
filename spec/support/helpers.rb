@@ -262,7 +262,7 @@ module Spec
     end
 
     def sha256(contents)
-    Bundler::SharedHelpers.digest(:SHA256).hexdigest(contents)
+      Bundler::SharedHelpers.digest(:SHA256).hexdigest(contents)
     end
 
     def strip_whitespace(str)

@@ -23,8 +23,8 @@ help_flags = %w[--help -h]
 help_flag_used = ARGV.any? { |a| help_flags.include? a }
 args = help_flag_used ? Bundler::CLI.reformatted_help_args(ARGV) : ARGV
 
-# pc = Bundler::CLI.send :remove_const, :PARSEABLE_COMMANDS
-# Bundler::CLI::PARSEABLE_COMMANDS = (pc + ["compose"]).freeze
+pc = Bundler::CLI.send :remove_const, :PARSEABLE_COMMANDS
+Bundler::CLI::PARSEABLE_COMMANDS = (pc + ["compose"]).freeze
 
 Bundler.ui.level = "error"
 
@@ -33,6 +33,6 @@ Bundler::CLI.check_unknown_options[:except] << :compose
 Bundler::CLI.stop_on_unknown_option! :compose
 Bundler::Thor.singleton_class.define_method(:basename) { "bundle" }
 
-# Bundler.with_friendly_errors do
-Bundler::CLI.start %w[compose] + args, debug: true
-# end
+Bundler.with_friendly_errors do
+  Bundler::CLI.start %w[compose] + args, debug: true
+end

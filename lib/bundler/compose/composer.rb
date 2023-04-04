@@ -5,10 +5,11 @@ module Bundler
     class Composer
       attr_reader :definition
 
-      def initialize(comment, definition, gems_to_add, _gemfiles_to_eval, gemfile)
+      def initialize(comment, definition, gems_to_add, gemfiles_to_eval, gemfile)
         @comment = comment
         @definition = definition
         @gems_to_add = gems_to_add
+        @gemfiles_to_eval = gemfiles_to_eval
         @gemfile = gemfile
       end
 
@@ -18,7 +19,7 @@ module Bundler
           commented(platforms, "Platforms found in the lockfile"),
           commented(global_sources, "Global sources from gemfile"),
           commented(composed_gems, "Composed dependencies"),
-          commented(composed_gemfiles, ""),
+          commented(composed_gemfiles, "Composed gemfiles"),
           commented(explicit_deps, "Original deps from gemfile"),
           commented(implicit_deps, "Deps from Gemfile.lock")
         ].compact.map { Array(_1).join("\n") }.join("\n\n") << "\n"
@@ -45,7 +46,9 @@ module Bundler
       end
 
       def composed_gemfiles
-        nil
+        @gemfiles_to_eval.map do |g|
+          %(eval_gemfile #{g.to_s.dump})
+        end
       end
 
       def explicit_deps
