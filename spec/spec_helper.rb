@@ -83,8 +83,8 @@ RSpec.configure do |config|
     extend(Spec::Helpers)
     begin
       bundler = Dir[File.join(base_system_gems, "**/bundler-*.gem")].first || \
-                Gem.loaded_specs["bundler"].cache_file || \
-                raise("No bundler found in #{base_system_gems}")
+                Gem.loaded_specs["bundler"].then { _1.cache_file unless _1.default_gem? } || \
+                raise("No bundler found in #{base_system_gems}, run `gem install bundler` then try again")
       system_gems bundler, "bundler-compose", path: pristine_system_gem_path
     rescue StandardError
       warn "Run `ruby -Ispec -rsupport/rubygems_ext -e 'Spec::Rubygems.install_test_deps'` to install deps"
