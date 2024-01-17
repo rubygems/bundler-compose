@@ -85,9 +85,20 @@ module Bundler
             Bundler.reset!
             Bundler.reset_settings_and_root!
 
-            Bundler.ui.debug "Running `#{["bundle", "exec", executable, *args].join(" ")}`"
-            Bundler::CLI.start(["exec", executable, *args], debug: true)
+            begin
+              run_bundle_exec(executable)
+            rescue GitError
+              Bundler.ui.debug "Running `bundle install`"
+              Bundler::CLI.start(["install", "--quiet"])
+
+              run_bundle_exec(executable)
+            end
           end
+        end
+
+        def run_bundle_exec(executable)
+          Bundler.ui.debug "Running `#{["bundle", "exec", executable, *args].join(" ")}`"
+          Bundler::CLI.start(["exec", executable, *args], debug: true)
         end
       end
 

@@ -250,7 +250,9 @@ RSpec.describe Bundler::Compose do
       RUBY
 
       bundle "compose gemfiles gems.devtools.rb --exec ruby -e 'puts Gem.loaded_specs.values.map(&:full_name).sort'"
-      expect(last_command.stdout).to end_with("\nbundler-#{Bundler::VERSION}\npathname-0.2.1\nrack-1.0.0\nthin-1.0")
+      pathname_version = Gem::Specification.default_stubs("pathname-*.gemspec").map(&:version).max
+      expect(last_command.stdout)
+        .to end_with("\nbundler-#{Bundler::VERSION}\npathname-#{pathname_version}\nrack-1.0.0\nthin-1.0")
 
       # diff
 
@@ -301,7 +303,9 @@ RSpec.describe Bundler::Compose do
       )
 
       bundle "compose gemfiles gems.devtools.rb --exec ruby -e 'puts Gem.loaded_specs.values.map(&:full_name).sort'"
-      expect(last_command.stdout).to eq("bundler-#{Bundler::VERSION}\npathname-0.2.1\nrack-1.0.0\nthin-1.0")
+      pathname_version = Gem::Specification.default_stubs("pathname-*.gemspec").map(&:version).max
+      expect(last_command.stdout)
+        .to eq("bundler-#{Bundler::VERSION}\npathname-#{pathname_version}\nrack-1.0.0\nthin-1.0")
     end
 
     it "adds multiple gems via bundle compose gems" do
@@ -540,6 +544,171 @@ RSpec.describe Bundler::Compose do
             activerecord (= 2.3.2)!
             activeresource (= 2.3.2)!
             activesupport (= 2.3.2)!
+            rails (= 2.3.2)!
+            rake (= 13.0.1)!
+            rspec (= 1.2.7)!
+
+          BUNDLED WITH
+             #{Bundler::VERSION}
+        LOCKFILE
+
+        "Gemfile" => exist,
+        "Gemfile.lock" => exist
+      )
+    end
+
+    it "adds an existing gem via bundle compose gems to a bundle with git gems" do
+      # setup
+
+      g = build_git "rack", "1.0.0", path: lib_path("rack")
+
+      bundled_app("Gemfile").write(<<~RUBY)
+        source "file://#{gem_repo1}"
+
+        gem "rails", "~> 2.2", require: false
+        gem "rack", git: #{lib_path("rack").to_s.dump}, require: false
+
+        group :development, :test do
+          gem "rspec"
+        end
+      RUBY
+
+      bundle :install
+
+      expect(the_bundle).to match_fs(
+        "Gemfile" => exist,
+        "Gemfile.lock" => read_as(<<~LOCKFILE)
+          GIT
+            remote: #{lib_path("rack")}
+            revision: #{g.ref_for("HEAD")}
+            specs:
+              rack (1.0.0)
+
+          GEM
+            remote: file://#{gem_repo1}/
+            specs:
+              actionmailer (2.3.2)
+                activesupport (= 2.3.2)
+              actionpack (2.3.2)
+                activesupport (= 2.3.2)
+              activerecord (2.3.2)
+                activesupport (= 2.3.2)
+              activeresource (2.3.2)
+                activesupport (= 2.3.2)
+              activesupport (2.3.2)
+              rails (2.3.2)
+                actionmailer (= 2.3.2)
+                actionpack (= 2.3.2)
+                activerecord (= 2.3.2)
+                activeresource (= 2.3.2)
+                rake (= 13.0.1)
+              rake (13.0.1)
+              rspec (1.2.7)
+
+          PLATFORMS
+            #{local_platform}
+
+          DEPENDENCIES
+            rack!
+            rails (~> 2.2)
+            rspec
+
+          BUNDLED WITH
+             #{Bundler::VERSION}
+        LOCKFILE
+      )
+
+      # compose
+
+      bundle "compose gems rails", verbose: true
+      expect(last_command.stdout).to eq("2.3.2")
+
+      # diff
+
+      expect(the_bundle).to match_fs(
+        ".bundle/bundler-compose/rails/gems.rails.rb" => read_as(<<~RUBY),
+          # lockfile:../../../Gemfile:#{sha256(lockfile)}
+
+          ################################################################################
+          # Platforms found in the lockfile
+          ################################################################################
+
+          platform("#{local_platform}") {}
+
+          ################################################################################
+          # Global sources from gemfile
+          ################################################################################
+
+          source "file://#{gem_repo1}/"
+
+          ################################################################################
+          # Composed dependencies
+          ################################################################################
+
+          gem "rails", "= 2.3.2", source: "file://#{gem_repo1}/"
+
+          ################################################################################
+          # Original deps from gemfile
+          ################################################################################
+
+          gem "rack", "= 1.0.0", git: #{lib_path("rack").to_s.dump}
+          gem "rails", "= 2.3.2", source: "file://#{gem_repo1}/"
+          group :development, :test do
+            gem "rspec", "= 1.2.7", source: "file://#{gem_repo1}/"
+          end
+
+          ################################################################################
+          # Deps from Gemfile.lock
+          ################################################################################
+
+          group :bundler_compose, optional: true do
+            gem "actionmailer", "= 2.3.2", source: "file://#{gem_repo1}/"
+            gem "actionpack", "= 2.3.2", source: "file://#{gem_repo1}/"
+            gem "activerecord", "= 2.3.2", source: "file://#{gem_repo1}/"
+            gem "activeresource", "= 2.3.2", source: "file://#{gem_repo1}/"
+            gem "activesupport", "= 2.3.2", source: "file://#{gem_repo1}/"
+            gem "rake", "= 13.0.1", source: "file://#{gem_repo1}/"
+          end
+        RUBY
+
+        ".bundle/bundler-compose/rails/gems.rails.rb.lock" => read_as(<<~LOCKFILE),
+          GIT
+            remote: #{lib_path("rack")}
+            revision: #{g.ref_for("HEAD")}
+            specs:
+              rack (1.0.0)
+
+          GEM
+            remote: file://#{gem_repo1}/
+            specs:
+              actionmailer (2.3.2)
+                activesupport (= 2.3.2)
+              actionpack (2.3.2)
+                activesupport (= 2.3.2)
+              activerecord (2.3.2)
+                activesupport (= 2.3.2)
+              activeresource (2.3.2)
+                activesupport (= 2.3.2)
+              activesupport (2.3.2)
+              rails (2.3.2)
+                actionmailer (= 2.3.2)
+                actionpack (= 2.3.2)
+                activerecord (= 2.3.2)
+                activeresource (= 2.3.2)
+                rake (= 13.0.1)
+              rake (13.0.1)
+              rspec (1.2.7)
+
+          PLATFORMS
+            #{local_platform}
+
+          DEPENDENCIES
+            actionmailer (= 2.3.2)!
+            actionpack (= 2.3.2)!
+            activerecord (= 2.3.2)!
+            activeresource (= 2.3.2)!
+            activesupport (= 2.3.2)!
+            rack (= 1.0.0)!
             rails (= 2.3.2)!
             rake (= 13.0.1)!
             rspec (= 1.2.7)!
