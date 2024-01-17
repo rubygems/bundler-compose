@@ -125,6 +125,12 @@ module Bundler
             "name: #{source.options["gemspec"].name.dump}"
           s << ", glob: #{source.options["glob"].dump}" if source.options["glob"]
           s
+        when Bundler::Source::Git
+          # TODO: detect path vs URI
+          s = ", git: #{source.uri.dump}"
+          s << ", branch: #{source.branch.dump}" if source.branch
+          s << ", ref: #{source.ref.dump}" if source.ref
+          s
         else
           raise Error, "Unhandled source type #{source.inspect}"
         end
