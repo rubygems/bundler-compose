@@ -41,7 +41,7 @@ module Spec
     end
 
     def x64_mingw_ucrt
-      Gem::Platform.new(%w[x64 mingw ucrt])
+      Gem::Platform.new(["x64", "mingw", "ucrt"])
     end
 
     def windows_platforms
@@ -53,13 +53,13 @@ module Spec
     end
 
     def not_local
-      all_platforms.find { |p| p != generic_local_platform }
+      all_platforms.find {|p| p != generic_local_platform }
     end
 
     def local_tag
       if RUBY_PLATFORM == "java"
         :jruby
-      elsif %w[x64-mingw32 x64-mingw-ucrt].include?(RUBY_PLATFORM)
+      elsif ["x64-mingw32", "x64-mingw-ucrt"].include?(RUBY_PLATFORM)
         :windows
       else
         :ruby
@@ -67,7 +67,7 @@ module Spec
     end
 
     def not_local_tag
-      %i[jruby windows ruby].find { |tag| tag != local_tag }
+      [:jruby, :windows, :ruby].find {|tag| tag != local_tag }
     end
 
     def local_ruby_engine
@@ -95,12 +95,17 @@ module Spec
       9999
     end
 
-    def lockfile_platforms(*extra)
-      formatted_lockfile_platforms(local_platform, *extra)
+    def default_platform_list(*extra, defaults: default_locked_platforms)
+      defaults.concat(extra).uniq
     end
 
-    def formatted_lockfile_platforms(*platforms)
+    def lockfile_platforms(*extra, defaults: default_locked_platforms)
+      platforms = default_platform_list(*extra, defaults: defaults)
       platforms.map(&:to_s).sort.join("\n  ")
+    end
+
+    def default_locked_platforms
+      [local_platform, generic_local_platform]
     end
   end
 end
