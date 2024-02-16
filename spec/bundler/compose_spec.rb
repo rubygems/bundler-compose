@@ -94,8 +94,7 @@ RSpec.describe Bundler::Compose do
           # Platforms found in the lockfile
           ################################################################################
 
-          platform("#{local_platform}") {}
-          platform("ruby") {}
+          #{gemfile_platforms}
 
           ################################################################################
           # Global sources from gemfile
@@ -265,8 +264,7 @@ RSpec.describe Bundler::Compose do
           # Platforms found in the lockfile
           ################################################################################
 
-          platform("#{local_platform}") {}
-          platform("ruby") {}
+          #{gemfile_platforms}
 
           ################################################################################
           # Global sources from gemfile
@@ -351,8 +349,7 @@ RSpec.describe Bundler::Compose do
           # Platforms found in the lockfile
           ################################################################################
 
-          platform("#{local_platform}") {}
-          platform("ruby") {}
+          #{gemfile_platforms}
 
           ################################################################################
           # Global sources from gemfile
@@ -479,8 +476,7 @@ RSpec.describe Bundler::Compose do
           # Platforms found in the lockfile
           ################################################################################
 
-          platform("#{local_platform}") {}
-          platform("ruby") {}
+          #{gemfile_platforms}
 
           ################################################################################
           # Global sources from gemfile
@@ -637,8 +633,7 @@ RSpec.describe Bundler::Compose do
           # Platforms found in the lockfile
           ################################################################################
 
-          platform("#{local_platform}") {}
-          platform("ruby") {}
+          #{gemfile_platforms}
 
           ################################################################################
           # Global sources from gemfile

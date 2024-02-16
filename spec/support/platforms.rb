@@ -104,8 +104,17 @@ module Spec
       platforms.map(&:to_s).sort.join("\n  ")
     end
 
+    def gemfile_platforms(*extra, defaults: default_locked_platforms)
+      platforms = default_platform_list(*extra, defaults:)
+      platforms.map { |pl| "platform(#{pl.to_s.dump}) {}" }.sort.join("\n")
+    end
+
     def default_locked_platforms
-      [local_platform, generic_local_platform]
+      if Bundler::VERSION >= "2.5"
+        [local_platform, generic_local_platform]
+      else
+        [local_platform]
+      end
     end
   end
 end
