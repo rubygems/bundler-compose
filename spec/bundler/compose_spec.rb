@@ -70,7 +70,7 @@ RSpec.describe Bundler::Compose do
             specs:
 
           PLATFORMS
-            #{local_platform}
+            #{lockfile_platforms}
 
           DEPENDENCIES
 
@@ -94,7 +94,7 @@ RSpec.describe Bundler::Compose do
           # Platforms found in the lockfile
           ################################################################################
 
-          platform("#{local_platform}") {}
+          #{gemfile_platforms}
 
           ################################################################################
           # Global sources from gemfile
@@ -131,7 +131,7 @@ RSpec.describe Bundler::Compose do
               rake (13.0.1)
 
           PLATFORMS
-            #{local_platform}
+            #{lockfile_platforms}
 
           DEPENDENCIES
             rails
@@ -172,7 +172,7 @@ RSpec.describe Bundler::Compose do
             specs:
 
           PLATFORMS
-            #{local_platform}
+            #{lockfile_platforms}
 
           DEPENDENCIES
 
@@ -232,7 +232,7 @@ RSpec.describe Bundler::Compose do
             specs:
 
           PLATFORMS
-            #{local_platform}
+            #{lockfile_platforms}
 
           DEPENDENCIES
 
@@ -264,7 +264,7 @@ RSpec.describe Bundler::Compose do
           # Platforms found in the lockfile
           ################################################################################
 
-          platform("#{local_platform}") {}
+          #{gemfile_platforms}
 
           ################################################################################
           # Global sources from gemfile
@@ -288,7 +288,7 @@ RSpec.describe Bundler::Compose do
                 rack
 
           PLATFORMS
-            #{local_platform}
+            #{lockfile_platforms}
 
           DEPENDENCIES
             thin!
@@ -325,7 +325,7 @@ RSpec.describe Bundler::Compose do
             specs:
 
           PLATFORMS
-            #{local_platform}
+            #{lockfile_platforms}
 
           DEPENDENCIES
 
@@ -349,7 +349,7 @@ RSpec.describe Bundler::Compose do
           # Platforms found in the lockfile
           ################################################################################
 
-          platform("#{local_platform}") {}
+          #{gemfile_platforms}
 
           ################################################################################
           # Global sources from gemfile
@@ -390,7 +390,7 @@ RSpec.describe Bundler::Compose do
               rake (13.0.1)
 
           PLATFORMS
-            #{local_platform}
+            #{lockfile_platforms}
 
           DEPENDENCIES
             rack-obama (= 1)
@@ -450,7 +450,7 @@ RSpec.describe Bundler::Compose do
               rspec (1.2.7)
 
           PLATFORMS
-            #{local_platform}
+            #{lockfile_platforms}
 
           DEPENDENCIES
             rails (~> 2.2)
@@ -476,7 +476,7 @@ RSpec.describe Bundler::Compose do
           # Platforms found in the lockfile
           ################################################################################
 
-          platform("#{local_platform}") {}
+          #{gemfile_platforms}
 
           ################################################################################
           # Global sources from gemfile
@@ -536,7 +536,7 @@ RSpec.describe Bundler::Compose do
               rspec (1.2.7)
 
           PLATFORMS
-            #{local_platform}
+            #{lockfile_platforms}
 
           DEPENDENCIES
             actionmailer (= 2.3.2)!
@@ -606,7 +606,7 @@ RSpec.describe Bundler::Compose do
               rspec (1.2.7)
 
           PLATFORMS
-            #{local_platform}
+            #{lockfile_platforms}
 
           DEPENDENCIES
             rack!
@@ -621,7 +621,7 @@ RSpec.describe Bundler::Compose do
       # compose
 
       bundle "compose gems rails", verbose: true
-      expect(last_command.stdout).to eq("2.3.2")
+      expect(last_command.stdout.lines).to end_with("2.3.2")
 
       # diff
 
@@ -633,7 +633,7 @@ RSpec.describe Bundler::Compose do
           # Platforms found in the lockfile
           ################################################################################
 
-          platform("#{local_platform}") {}
+          #{gemfile_platforms}
 
           ################################################################################
           # Global sources from gemfile
@@ -700,7 +700,7 @@ RSpec.describe Bundler::Compose do
               rspec (1.2.7)
 
           PLATFORMS
-            #{local_platform}
+            #{lockfile_platforms}
 
           DEPENDENCIES
             actionmailer (= 2.3.2)!

@@ -12,9 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     name: Ruby ${{ matrix.ruby }}
     strategy:
+      fail-fast: false
       matrix:
         ruby:
-          - "3.2.1"
+          - "3.2.3"
+          - "3.3.0"
 
     steps:
       - uses: actions/checkout@v3
@@ -23,6 +25,8 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler: none
+      - name: Install bundler
+        run: gem install bundler:$(bundle --version | cut -d' ' -f3-)
       - name: Install deps
         run: bin/rake spec:deps
       - name: Run default task
