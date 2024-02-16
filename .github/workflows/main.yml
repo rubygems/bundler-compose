@@ -25,6 +25,8 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler: none
+      - name: Install bundler
+        run: gem install bundler:$(bundle --version | cut -d' ' -f3-)
       - name: Install deps
         run: bin/rake spec:deps
       - name: Run default task
